@@ -1,6 +1,17 @@
-# PDF to JPG_QT v1.1
+# PDF to JPG_QT v1.1.0 — Windows x64
 
-Windows x64、C++20、Qt Widgets / Qt PDF、MSVC。啟動 `dist/PDF-to-JPG_QT.exe`；移動時請帶整個 dist 資料夾。
+離線 PDF 批次轉 JPG 桌面工具，採 C++20、Qt Widgets / Qt PDF、MSVC。作者與發布者：**Kaido-MSVC**。
+
+## 下載與使用
+
+正式下載見 [GitHub Release v1.1.0](https://github.com/Kaido-MSVC/PDF-to-JPG-Qt/releases/tag/v1.1.0)。
+
+- [免安裝版 Portable ZIP](https://github.com/Kaido-MSVC/PDF-to-JPG-Qt/releases/download/v1.1.0/PDF-to-JPG-Qt-1.1.0-Windows-x64-Portable.zip)：完整解壓後執行 `PDF-to-JPG-Qt-1.1.0-Portable/PDF-to-JPG_QT.exe`。
+- [SHA256SUMS.txt](https://github.com/Kaido-MSVC/PDF-to-JPG-Qt/releases/download/v1.1.0/SHA256SUMS.txt)：本次正式 ZIP 的 SHA-256。
+- 原始碼可 clone 本倉庫，或使用 Release 的 Source code 下載；自行建置後執行 `dist/PDF-to-JPG_QT.exe`。
+
+請保留完整資料夾、Qt DLL、外掛與授權文件，不要只複製 EXE。Qt 已隨附；Microsoft Visual C++ 可轉散發套件需另行安裝，見下方系統需求。執行檔未數位簽章。
+
 
 ## 系統需求
 
@@ -61,3 +72,12 @@ python .\verify_deployment.py # 正式版離開 Qt PATH 的啟動與 DLL 來源�
 本程式使用 Qt 6.12.0 與 Qt PDF 6.140.0（隨 Qt 6.12.0 發佈；內含 PDFium），Qt 依 GNU LGPLv3 以動態連結方式使用；Qt DLL 隨程式放在 dist 資料夾，可自行替換為相容版本。Qt 原始碼可由 https://download.qt.io/ 或 https://code.qt.io/ 取得。
 
 第三方元件清單、版本與授權見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，授權全文在 `licenses/`。程式內「關於」→「第三方授權」／「關於 Qt」也可查看。發佈的 dist 資料夾會一併附上 LICENSE、THIRD_PARTY_NOTICES.md 與 licenses/。
+
+
+## v1.1.0 公開發布核對
+
+沿用已通過完整審查與最後增量驗收的 `5dc28b3` 程式及 dist，本次僅更新 README 的正式下載與發布說明，未修改功能、授權文件或 dist，未重新編譯或重跑已通過的整套測試。
+
+Portable ZIP 與原 dist 的 85 個檔案逐一核對 SHA-256 相同。正式 EXE 與 build EXE 的 SHA-256 均為 `e930a96e4d1cfd6a1a855d0734728203b723cbb393dc1790eb09281e51f12ae4`。發布後另核對遠端 commit/tag 與公開附件下載雜湊。
+
+[VERIFICATION.md](VERIFICATION.md) 為歷史驗收紀錄，其中較早的 EXE 雜湊與部署描述保留當時狀態；本次附件以 Release 與 SHA256SUMS.txt 為準。未另做乾淨 Windows 虛擬機或全版本 Windows 相容性測試。
