@@ -9,6 +9,9 @@ startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDO
 exe=root/'dist'/'PDF-to-JPG_QT.exe'
 for doc in ('LICENSE','THIRD_PARTY_NOTICES.md','licenses/LGPL-3.0.txt','licenses/GPL-3.0.txt','licenses/Qt-LICENSE.txt'):
     assert (exe.parent/doc).is_file(),f'missing license file: {doc}'
+# Windows SDK redistributables are not shipped (their license needs recipient terms); Windows provides d3dcompiler_47.
+for sdk in ('d3dcompiler_47.dll','dxcompiler.dll','dxil.dll'):
+    assert not (exe.parent/sdk).exists(),f'Windows SDK DLL deployed: {sdk}'
 for stray in ('COPYING.txt','Copyright.txt','LICENSE.FDL'):
     assert not (exe.parent/'licenses'/stray).exists(),f'unrelated license file deployed: {stray}'
 # SPDX templates use placeholder copyright lines; shipped license files must carry the real ones.

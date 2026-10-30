@@ -23,8 +23,11 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 if not exist "$projectRoot\$distName" mkdir "$projectRoot\$distName"
 copy /y "$projectRoot\$buildName\PDF-to-JPG_QT.exe" "$projectRoot\$distName\PDF-to-JPG_QT.exe" >nul
-"$QtRoot\bin\windeployqt.exe" --release --compiler-runtime --no-translations --no-opengl-sw "$projectRoot\$distName\PDF-to-JPG_QT.exe"
+"$QtRoot\bin\windeployqt.exe" --release --compiler-runtime --no-translations --no-opengl-sw --no-system-d3d-compiler --no-system-dxc-compiler "$projectRoot\$distName\PDF-to-JPG_QT.exe"
 "@ | Set-Content -LiteralPath $cmdFile -Encoding ascii
+# Start from an empty dist so files dropped from deployment (e.g. Windows SDK DLLs) do not linger.
+$distPath=Join-Path $projectRoot $distName
+if(Test-Path -LiteralPath $distPath){Remove-Item -LiteralPath $distPath -Recurse -Force}
 & cmd.exe /d /c $cmdFile
 if($LASTEXITCODE){throw "建置失敗：$LASTEXITCODE"}
 # windeployqt 6.12 does not recognize the VC145 CRT folder. Deploy app-local

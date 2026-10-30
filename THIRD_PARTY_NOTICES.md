@@ -129,7 +129,6 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 | 檔案 | 來源 | 版本 | 授權 |
 |---|---|---|---|
 | msvcp140*.dll、vcruntime140*.dll、concrt140.dll、vccorlib140.dll | Microsoft Visual C++ Redistributable | 14.52.36815 | Microsoft Visual Studio 授權條款之「可散發程式碼」 |
-| d3dcompiler_47.dll、dxcompiler.dll、dxil.dll | Windows SDK Redist（由 windeployqt 部署，供 Qt RHI 使用） | 10.0.28000 / 1.9.2602 / 101.6.2112 | Microsoft Windows SDK 授權條款 |
 
 ## 圖示與素材
 
