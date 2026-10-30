@@ -39,7 +39,8 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'licenses') -Destination $license
 foreach($document in 'LICENSE','THIRD_PARTY_NOTICES.md'){
     Copy-Item -LiteralPath (Join-Path $projectRoot $document) -Destination (Join-Path $projectRoot $distName) -Force
 }
-foreach($document in 'README.md','VERIFICATION.md'){
+# VERIFICATION.md is a development record and stays in the repo only.
+foreach($document in 'README.md'){
     if(Test-Path -LiteralPath (Join-Path $projectRoot $document)){
         Copy-Item -LiteralPath (Join-Path $projectRoot $document) -Destination (Join-Path $projectRoot $distName)
     }

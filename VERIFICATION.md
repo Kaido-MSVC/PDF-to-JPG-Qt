@@ -63,3 +63,18 @@ SHA-256：DCA6D2934E3560B98587C97BF753ED92C3641C35A1F2B756FF181A6431430E71。
 正式版以乾淨 PATH 啟動，Qt/PDF/Windows plugin/MSVC CRT 均由 dist 載入；另核對正式原始碼與通過測試的隔離副本相同，正式二進位不含診斷／故障入口標記。功能驗收使用同原始碼的獨立驗收版；正式版做啟動與 DLL 來源檢查，未以正式 GUI 另手動重跑全部轉換情境。
 
 D:/projects/PDF to JPG 原 Python 專案的 223 個檔案於前後逐一核對 SHA-256 及檔案數，無變更。
+
+## 2026-10-30 變更
+
+部署內容調整（commit 21b2049、1adddb5 及本次）：
+
+- Windows SDK 的 DLL（d3dcompiler_47.dll、dxcompiler.dll、dxil.dll）與 MSVC 執行階段 DLL（vcruntime140*、msvcp140*、concrt140、vccorlib140）不再隨程式散布。windeployqt 改用 `--no-compiler-runtime`，並加上 `--no-system-d3d-compiler`、`--no-system-dxc-compiler`；build.ps1 不再複製 Microsoft.VC145.CRT，且每次部署前清空 dist。
+- 執行階段改由使用者安裝 Microsoft 官方最新版 Visual C++ 可轉散發套件（x64），見 README「系統需求」。Windows 10/11 已內建 d3dcompiler_47.dll。
+- 本檔第 15 行「完整 dist（…CRT…）」與第 63 行「MSVC CRT 均由 dist 載入」的描述已不適用：dist 不再含 CRT，正式版改由系統載入 msvcp140.dll 等執行階段。
+- 本檔為開發紀錄，不再複製進 dist。
+
+驗證方式與結果：
+
+- `build.ps1` 建置與部署成功；`verify_deployment.py` 通過。該腳本以只含 System32 的 PATH 啟動正式版，確認 Qt/PDF/Windows plugin 由 dist 載入、msvcp140.dll 由系統載入；並檢查 dist 不含 Windows SDK DLL、MSVC 執行階段 DLL 與 VERIFICATION.md，授權檔無占位字且與 licenses/ 一致。
+- 移除 Windows SDK DLL 後，以 Windows UI Automation 操作正式版 GUI（PATH 同樣只含 System32）：啟動、經檔案對話框加入 24 頁 PDF 並轉換（完成 1、失敗 0，輸出 24 張 JPG）、開啟「關於」與「第三方授權」視窗後關閉，程式結束碼 0。測試前後備份並還原 HKCU\Software\PDF2JPG 偏好設定。
+- 當時 dist 仍附帶 MSVC 執行階段；改由系統載入後僅以 verify_deployment.py 驗證啟動。本機已安裝 VC++ 可轉散發套件，未模擬未安裝的情況。
