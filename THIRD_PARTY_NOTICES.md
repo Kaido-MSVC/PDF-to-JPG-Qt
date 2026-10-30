@@ -8,6 +8,8 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 - Qt Core／GUI／Network／Image Formats 的第三方元件：Qt 6.12.0 官方文件的各元件 attribution 頁
   （隨 Qt 安裝於 `Docs/Qt-6.12.0/<模組>/<模組>-attribution-*.html`，線上版見
   https://doc.qt.io/qt-6/licenses-used-in-qt.html ），著作權聲明與條文逐字取自該頁。
+- XSVG：本機文件沒有它的 attribution 頁，條文取自 qtbase v6.12.0 原始碼的 `src/gui/util/LICENSE.XSVG.txt`
+  （與同目錄 `qguisvg.cpp` 內的聲明逐字相同）。
 - Qt PDF 內含的元件：Qt 6.12.0 隨附 SBOM `qtwebengine-chromium-pdf-6.140.0.spdx.json` 的
   `LicenseRef-QtWebEngine-Chromium-Pdf-*` 條文，與官方頁 https://doc-snapshots.qt.io/qtpdf/qtpdf-licensing.html 一致。
 - 只列出隨本程式散布之 DLL 與外掛實際內含的元件。
@@ -96,7 +98,7 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 | Smooth Scaling Algorithm | — | BSD-2-Clause 及 Imlib2 | Daniel M. Duley; Carsten Haitzler 等 | — | `QtGui-smooth-scaling-algorithm.txt` |
 | X Server helper | — | X11 及 HPND | X Consortium; Digital Equipment Corporation | https://www.x.org/ | `QtGui-xserverhelper.txt` |
 | sRGB color profile | — | ICC License | International Color Consortium | http://www.color.org/ | `QtGui-icc-srgb-color-profile.txt` |
-| XSVG | — | HPND-sell-variant | Copyright 2002 USC/Information Sciences Institute（取自 SBOM） | — | **待補**：Qt 官方文件與 SBOM 均未提供此元件的授權條文全文 |
+| XSVG（弧線處理程式碼，位於 qtbase `src/gui/util/qguisvg.cpp`） | — | HPND-sell-variant | USC/Information Sciences Institute | — | `QtGui-xsvg.txt` |
 
 ### 2.4 Qt Network（Qt6Network.dll）
 
