@@ -122,14 +122,6 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 - This software is based in part on the work of the Independent JPEG Group.
 - PDF 為 Adobe 的商標；本程式與 Adobe 無關。
 
-## 3. Microsoft 可再散布元件
-
-下列檔案由 Microsoft 依其可再散布條款提供，不屬於開源授權，亦不受本專案 MIT 授權涵蓋：
-
-| 檔案 | 來源 | 版本 | 授權 |
-|---|---|---|---|
-| msvcp140*.dll、vcruntime140*.dll、concrt140.dll、vccorlib140.dll | Microsoft Visual C++ Redistributable | 14.52.36815 | Microsoft Visual Studio 授權條款之「可散發程式碼」 |
-
 ## 圖示與素材
 
 本程式圖示（assets/app.ico、assets/app.png）由作者 Kaido-MSVC 使用 OpenAI ChatGPT 圖像生成功能製作。

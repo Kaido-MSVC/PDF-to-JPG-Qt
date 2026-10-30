@@ -23,19 +23,14 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 if not exist "$projectRoot\$distName" mkdir "$projectRoot\$distName"
 copy /y "$projectRoot\$buildName\PDF-to-JPG_QT.exe" "$projectRoot\$distName\PDF-to-JPG_QT.exe" >nul
-"$QtRoot\bin\windeployqt.exe" --release --compiler-runtime --no-translations --no-opengl-sw --no-system-d3d-compiler --no-system-dxc-compiler "$projectRoot\$distName\PDF-to-JPG_QT.exe"
+"$QtRoot\bin\windeployqt.exe" --release --no-compiler-runtime --no-translations --no-opengl-sw --no-system-d3d-compiler --no-system-dxc-compiler "$projectRoot\$distName\PDF-to-JPG_QT.exe"
 "@ | Set-Content -LiteralPath $cmdFile -Encoding ascii
 # Start from an empty dist so files dropped from deployment (e.g. Windows SDK DLLs) do not linger.
 $distPath=Join-Path $projectRoot $distName
 if(Test-Path -LiteralPath $distPath){Remove-Item -LiteralPath $distPath -Recurse -Force}
 & cmd.exe /d /c $cmdFile
 if($LASTEXITCODE){throw "建置失敗：$LASTEXITCODE"}
-# windeployqt 6.12 does not recognize the VC145 CRT folder. Deploy app-local
-# runtime DLLs matching the actual compiler instead of changing global settings.
-$crt=Get-ChildItem -LiteralPath (Join-Path $vs 'VC\Redist\MSVC') -Directory |
-    Sort-Object Name -Descending | ForEach-Object {Get-ChildItem -Path (Join-Path $_.FullName 'x64\Microsoft.VC*.CRT') -Directory -ErrorAction SilentlyContinue} | Select-Object -First 1
-if(!$crt){throw '找不到可部署的 MSVC x64 CRT'}
-Copy-Item -Path (Join-Path $crt.FullName '*.dll') -Destination (Join-Path $projectRoot $distName)
+# The MSVC runtime is not shipped; users install Microsoft's latest VC++ Redistributable (see README).
 # 授權檔只用專案內的 LICENSE、THIRD_PARTY_NOTICES.md 與 licenses/（含 Qt 的 LGPLv3/GPLv3 全文）。
 # 不再整包複製 Qt 安裝目錄的 Licenses，那裡混有 CMake 與文件授權，並非本程式散布的元件。
 $licenseTarget=Join-Path $projectRoot "$distName\licenses"

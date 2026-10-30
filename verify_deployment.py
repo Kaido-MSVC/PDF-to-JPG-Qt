@@ -12,6 +12,10 @@ for doc in ('LICENSE','THIRD_PARTY_NOTICES.md','licenses/LGPL-3.0.txt','licenses
 # Windows SDK redistributables are not shipped (their license needs recipient terms); Windows provides d3dcompiler_47.
 for sdk in ('d3dcompiler_47.dll','dxcompiler.dll','dxil.dll'):
     assert not (exe.parent/sdk).exists(),f'Windows SDK DLL deployed: {sdk}'
+# The MSVC runtime is not shipped either; users install Microsoft's VC++ Redistributable.
+for pattern in ('vcruntime*','msvcp*','concrt*','vccorlib*'):
+    found=[p.name for p in exe.parent.rglob(pattern)]
+    assert not found,f'MSVC runtime DLL deployed: {found}'
 for stray in ('COPYING.txt','Copyright.txt','LICENSE.FDL'):
     assert not (exe.parent/'licenses'/stray).exists(),f'unrelated license file deployed: {stray}'
 # SPDX templates use placeholder copyright lines; shipped license files must carry the real ones.
@@ -47,10 +51,11 @@ try:
                 if ctypes.windll.psapi.GetModuleFileNameExW(ctypes.c_void_p(int(p._handle)),ctypes.c_void_p(mod),buf,len(buf)):modules.add(buf.value)
         if any(Path(m).name.lower()=='qwindows.dll' for m in modules):break
         time.sleep(.1)
-    for dll in ('Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll','Qt6Pdf.dll','msvcp140.dll','qwindows.dll'):
+    for dll in ('Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll','Qt6Pdf.dll','qwindows.dll'):
         assert any(Path(m).name.lower()==dll.lower() and str(exe.parent).lower() in m.lower() for m in modules),dll
+    assert any(Path(m).name.lower()=='msvcp140.dll' and str(exe.parent).lower() not in m.lower() for m in modules),'msvcp140.dll not loaded from the system'
     result=dict(passed=True,exe=str(exe),loadedModules=sorted(modules),note='Idle startup verified; no conversion active when test process was terminated.')
     (root/'work'/'release-deployment.json').write_text(json.dumps(result,indent=2),encoding='utf8')
-    print('PASS production deployment: Qt/PDF/Windows plugin/MSVC CRT loaded from dist')
+    print('PASS production deployment: Qt/PDF/Windows plugin loaded from dist, MSVC CRT from the system')
 finally:
     p.terminate();p.wait(timeout=10)

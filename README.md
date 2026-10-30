@@ -2,6 +2,15 @@
 
 Windows x64、C++20、Qt Widgets / Qt PDF、MSVC。啟動 `dist/PDF-to-JPG_QT.exe`；移動時請帶整個 dist 資料夾。
 
+## 系統需求
+
+- Windows 10/11 x64。
+- 需先安裝 **Microsoft Visual C++ 可轉散發套件（x64）的最新版本**。即使電腦已安裝舊版，也請更新到最新版，否則程式可能無法啟動或異常結束。本程式不附帶這些執行階段 DLL。
+- 下載：Microsoft 官方「最新支援的 Visual C++ 可轉散發套件」頁面
+  https://learn.microsoft.com/zh-tw/cpp/windows/latest-supported-vc-redist ，x64 版的永久連結為
+  https://aka.ms/vc14/vc_redist.x64.exe 。
+- 若啟動時出現找不到 `vcruntime140.dll`、`msvcp140.dll`（或 `vcruntime140_1.dll`、`msvcp140_1.dll` 等）的錯誤，就是尚未安裝此套件，安裝後再啟動即可。
+
 加入 PDF 或資料夾，選擇輸出路徑、150/200/300/600 DPI、JPEG 品質、1–8 條編碼執行緒與影像預算。預設 200 DPI、品質 92、512 MiB。偏好設定由 QSettings 保存。
 
 續傳每次啟動預設關閉，不保存勾選狀態。關閉時，每份 PDF 建立新的來源名稱資料夾，重名自動加 `(2)`、`(3)`。
@@ -29,7 +38,7 @@ python .\verify.py          # 真實 PDF/JPEG、GUI 自動驗收、故障注入�
 python .\verify_deployment.py # 正式版離開 Qt PATH 的啟動與 DLL 來源檢查
 ```
 
-本機 Qt 6.12.0 `D:/qt/6.12.0/msvc2022_64`、Visual Studio 2026 Community / MSVC x64。建置工具環境只在子程序內設定；未改全域 PATH 或系統設定。windeployqt 無法辨識本機新 CRT 目錄時，由腳本複製 app-local x64 CRT；無需全域安裝。
+本機 Qt 6.12.0 `D:/qt/6.12.0/msvc2022_64`、Visual Studio 2026 Community / MSVC x64。建置工具環境只在子程序內設定；未改全域 PATH 或系統設定。dist 不附帶 MSVC 執行階段 DLL（windeployqt 使用 `--no-compiler-runtime`），執行時使用系統安裝的 Visual C++ 可轉散發套件，見「系統需求」。
 
 驗收使用本機既有 PyMuPDF 與 Pillow，不安裝套件；程式執行不需要 Python。測試設定使用執行檔旁的 INI，避免覆蓋正式版偏好。測試資料在 work；所有密碼為合成測試資料。
 
