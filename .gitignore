@@ -1,0 +1,20 @@
+# 建置與打包輸出
+build/
+build-*/
+dist/
+dist-*/
+work/
+*.zip
+*.7z
+*-setup.exe
+*.msi
+
+# IDE / 編輯器設定
+.vs/
+.vscode/
+.idea/
+*.user
+*.user.*
+CMakeUserPresets.json
+.qtcreator/
+.cache/
