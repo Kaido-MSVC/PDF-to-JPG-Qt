@@ -1,0 +1,2 @@
+# 使用說明.txt 給使用者用舊版記事本開啟：保持 CRLF（檔案本身為 UTF-8 含 BOM）
+使用說明.txt text eol=crlf

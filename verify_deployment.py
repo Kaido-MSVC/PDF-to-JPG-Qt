@@ -16,7 +16,12 @@ for sdk in ('d3dcompiler_47.dll','dxcompiler.dll','dxil.dll'):
 for pattern in ('vcruntime*','msvcp*','concrt*','vccorlib*'):
     found=[p.name for p in exe.parent.rglob(pattern)]
     assert not found,f'MSVC runtime DLL deployed: {found}'
-assert not (exe.parent/'VERIFICATION.md').exists(),'development record deployed: VERIFICATION.md'
+for dev_doc in ('VERIFICATION.md','README.md'):
+    assert not (exe.parent/dev_doc).exists(),f'development doc deployed: {dev_doc}'
+guide=(exe.parent/'使用說明.txt').read_bytes()
+assert guide.startswith(b'\xef\xbb\xbf') and guide.count(b'\n')==guide.count(b'\r\n'),'使用說明.txt must be UTF-8 with BOM and CRLF'
+version=re.search(r'project\([^)]*VERSION\s+([\d.]+)',(root/'CMakeLists.txt').read_text(encoding='utf8')).group(1)
+assert f'版本 {version}' in guide.decode('utf-8-sig'),f'使用說明.txt does not state version {version}'
 for stray in ('COPYING.txt','Copyright.txt','LICENSE.FDL'):
     assert not (exe.parent/'licenses'/stray).exists(),f'unrelated license file deployed: {stray}'
 # SPDX templates use placeholder copyright lines; shipped license files must carry the real ones.

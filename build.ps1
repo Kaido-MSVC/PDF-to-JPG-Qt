@@ -39,9 +39,10 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'licenses') -Destination $license
 foreach($document in 'LICENSE','THIRD_PARTY_NOTICES.md'){
     Copy-Item -LiteralPath (Join-Path $projectRoot $document) -Destination (Join-Path $projectRoot $distName) -Force
 }
-# VERIFICATION.md is a development record and stays in the repo only.
-foreach($document in 'README.md'){
-    if(Test-Path -LiteralPath (Join-Path $projectRoot $document)){
-        Copy-Item -LiteralPath (Join-Path $projectRoot $document) -Destination (Join-Path $projectRoot $distName)
-    }
-}
+# dist gets the end-user guide only; README.md and VERIFICATION.md are development docs and stay in the repo.
+# The guide states the version in plain text, so it must match project(VERSION) in CMakeLists.txt.
+$guide=Join-Path $projectRoot '使用說明.txt'
+$version=[regex]::Match((Get-Content -LiteralPath (Join-Path $projectRoot 'CMakeLists.txt') -Raw),'project\([^)]*VERSION\s+([\d.]+)').Groups[1].Value
+if(!$version){throw '無法從 CMakeLists.txt 讀取 project(VERSION)'}
+if(-not (Get-Content -LiteralPath $guide -Raw -Encoding utf8).Contains("版本 $version")){throw "使用說明.txt 的版本與 CMakeLists.txt（$version）不一致"}
+Copy-Item -LiteralPath $guide -Destination (Join-Path $projectRoot $distName)
