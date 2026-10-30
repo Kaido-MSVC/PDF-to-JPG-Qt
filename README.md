@@ -23,10 +23,10 @@ PDF 由單一背景執行緒渲染，JPEG 由多條工作執行緒編碼。影�
 ## 建置與驗收
 
 ```powershell
-.uild.ps1                  # 正式 Release：build、dist，沒有診斷命令與故障注入
-.uild.ps1 -Testing         # 驗收 Release：build-test、dist-test，含 engine-tests
-python .verify.py          # 真實 PDF/JPEG、GUI 自動驗收、故障注入與壓力測試
-python .verify_deployment.py # 正式版離開 Qt PATH 的啟動與 DLL 來源檢查
+.\build.ps1                  # 正式 Release：build、dist，沒有診斷命令與故障注入
+.\build.ps1 -Testing         # 驗收 Release：build-test、dist-test，含 engine-tests
+python .\verify.py          # 真實 PDF/JPEG、GUI 自動驗收、故障注入與壓力測試
+python .\verify_deployment.py # 正式版離開 Qt PATH 的啟動與 DLL 來源檢查
 ```
 
 本機 Qt 6.12.0 `D:/qt/6.12.0/msvc2022_64`、Visual Studio 2026 Community / MSVC x64。建置工具環境只在子程序內設定；未改全域 PATH 或系統設定。windeployqt 無法辨識本機新 CRT 目錄時，由腳本複製 app-local x64 CRT；無需全域安裝。
@@ -49,6 +49,6 @@ python .verify_deployment.py # 正式版離開 Qt PATH 的啟動與 DLL 來源�
 
 本程式以 [MIT 授權](LICENSE) 釋出，Copyright © 2026 Kaido-MSVC。程式圖示由 AI（ChatGPT）生成。
 
-本程式使用 Qt 6.12.0 與 Qt PDF 6.140.0（內含 PDFium），Qt 依 GNU LGPLv3 以動態連結方式使用；Qt DLL 隨程式放在 dist 資料夾，可自行替換為相容版本。Qt 原始碼可由 https://download.qt.io/ 或 https://code.qt.io/ 取得。
+本程式使用 Qt 6.12.0 與 Qt PDF 6.140.0（隨 Qt 6.12.0 發佈；內含 PDFium），Qt 依 GNU LGPLv3 以動態連結方式使用；Qt DLL 隨程式放在 dist 資料夾，可自行替換為相容版本。Qt 原始碼可由 https://download.qt.io/ 或 https://code.qt.io/ 取得。
 
 第三方元件清單、版本與授權見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，授權全文在 `licenses/`。程式內「關於」→「第三方授權」／「關於 Qt」也可查看。發佈的 dist 資料夾會一併附上 LICENSE、THIRD_PARTY_NOTICES.md 與 licenses/。

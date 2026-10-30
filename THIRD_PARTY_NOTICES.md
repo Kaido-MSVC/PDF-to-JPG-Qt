@@ -12,7 +12,7 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 
 | 項目 | 內容 |
 |---|---|
-| 元件 | Qt Core、Qt GUI、Qt Widgets、Qt Network、Qt SVG（6.12.0）；Qt PDF（6.140.0）；Qt Image Formats 外掛（6.12.0）；Windows 平台、樣式、TLS、網路資訊、圖示引擎、TUIO 外掛（6.12.0） |
+| 元件 | Qt Core、Qt GUI、Qt Widgets、Qt Network、Qt SVG（6.12.0）；Qt PDF 6.140.0（隨 Qt 6.12.0 發佈）；Qt Image Formats 外掛（6.12.0）；Windows 平台、樣式、TLS、網路資訊、圖示引擎、TUIO 外掛（6.12.0） |
 | 著作權 | Copyright (C) The Qt Company Ltd. and other contributors |
 | 授權 | GNU Lesser General Public License v3（`licenses/LGPL-3.0.txt`，其引用之 GPLv3 見 `licenses/GPL-3.0.txt`；Qt 原始授權檔見 `licenses/Qt-LICENSE.txt`） |
 | 官方網址 | https://www.qt.io/ |
@@ -29,7 +29,7 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 
 ### 2.1 Qt PDF 內含（PDFium 等）
 
-Qt PDF 內含 PDFium 快照，官方文件未標示下列元件的個別版本，隨 Qt PDF 6.140.0 散布。
+Qt PDF 內含 PDFium 快照，官方文件未標示下列元件的個別版本，隨 Qt PDF 6.140.0（隨 Qt 6.12.0 發佈）散布。
 
 | 元件 | 授權 | 官方網址 | 授權全文 |
 |---|---|---|---|
