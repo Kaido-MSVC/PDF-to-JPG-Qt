@@ -4,7 +4,7 @@ Windows x64、C++20、Qt Widgets / Qt PDF、MSVC。啟動 `dist/PDF-to-JPG_QT.ex
 
 ## 系統需求
 
-- Windows 10/11 x64。
+- Windows 10 版本 1809 以上，或 Windows 11（x64）。此為 Qt 6.12 官方支援的最低版本（https://doc.qt.io/qt-6/supported-platforms.html ）。
 - 需先安裝 **Microsoft Visual C++ 可轉散發套件（x64）的最新版本**。即使電腦已安裝舊版，也請更新到最新版，否則程式可能無法啟動或異常結束。本程式不附帶這些執行階段 DLL。
 - 下載：Microsoft 官方「最新支援的 Visual C++ 可轉散發套件」頁面
   https://learn.microsoft.com/zh-tw/cpp/windows/latest-supported-vc-redist ，x64 版的永久連結為

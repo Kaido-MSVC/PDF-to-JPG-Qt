@@ -27,9 +27,20 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 ### 連結方式與替換 Qt
 
 - 本程式以**動態連結**使用 Qt，Qt DLL（`Qt6*.dll`）與外掛資料夾（`platforms/`、`imageformats/` 等）以獨立檔案放在執行檔旁。
+  唯一例外是 QtEntryPoint（見下節），它依 Qt 的設計靜態連結進 EXE，並以 BSD-3-Clause 授權。
 - 使用者可以自行以相容、ABI 一致的 Qt 6.12.x（MSVC 2022 x64）DLL 替換這些檔案；程式不做簽章或雜湊驗證以阻擋替換。
 - 本專案的 MIT 授權允許修改與為除錯目的進行反向工程。
 - 如需索取本程式所用 Qt 版本的原始碼，可依上方網址取得，或聯絡作者 Kaido-MSVC。
+
+### QtEntryPoint（靜態連結進 EXE）
+
+| 項目 | 內容 |
+|---|---|
+| 元件 | QtEntryPoint 6.12.0（`Qt6EntryPoint.lib`，提供 Windows 的 `WinMain` 進入點） |
+| 連結方式 | **靜態連結**進 `PDF-to-JPG_QT.exe`（其他 Qt 模組皆為動態連結） |
+| 著作權 | Copyright (C) 2019 The Qt Company Ltd. |
+| 授權 | 商業授權或 BSD 3-Clause；本程式依 BSD 3-Clause 使用 |
+| 授權檔 | `QtEntryPoint.txt`（逐字取自 Qt 6.12.0 文件 `qtentrypoint.html`「License Information」） |
 
 ## 2. Qt 內含的第三方元件
 
