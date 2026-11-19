@@ -2,6 +2,8 @@
 
 離線 PDF 批次轉 JPG 桌面工具，採 C++20、Qt Widgets / Qt PDF、MSVC。作者與發布者：**Kaido-MSVC**。
 
+Qt 版支援單份 PDF 中斷續傳，需要 Visual C++ x64 執行階段，專案程式碼採 MIT。另有 [PDF to JPG Python 版](https://github.com/Kaido-MSVC/PDF-to-JPG-Python/releases/tag/v1.0.0)，提供單一 EXE，專案採 AGPL-3.0-or-later。
+
 ## 下載與使用
 
 正式下載見 [GitHub Release v1.1.0](https://github.com/Kaido-MSVC/PDF-to-JPG-Qt/releases/tag/v1.1.0)。
