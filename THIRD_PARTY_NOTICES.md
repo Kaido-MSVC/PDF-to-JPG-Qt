@@ -18,11 +18,11 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 
 | 項目 | 內容 |
 |---|---|
-| 元件 | Qt Core、Qt GUI、Qt Widgets、Qt Network、Qt SVG（6.12.0）；Qt PDF 6.140.0（隨 Qt 6.12.0 發佈）；Qt Image Formats 外掛（6.12.0）；Windows 平台、樣式、TLS、網路資訊、圖示引擎、TUIO 外掛（6.12.0） |
+| 元件 | Qt Core、Qt GUI、Qt Widgets、Qt Network、Qt SVG（6.12.0）；Qt PDF 6.140.0（獨立發布，搭配 Qt 6.12.0）；Qt Image Formats 外掛（6.12.0）；Windows 平台、樣式、TLS、網路資訊、圖示引擎、TUIO 外掛（6.12.0） |
 | 著作權 | Copyright (C) The Qt Company Ltd. and other contributors |
 | 授權 | GNU Lesser General Public License v3（`licenses/LGPL-3.0.txt`，其引用之 GPLv3 見 `licenses/GPL-3.0.txt`；Qt 原始授權檔見 `licenses/Qt-LICENSE.txt`） |
 | 官方網址 | https://www.qt.io/ |
-| 原始碼 | 本程式使用未修改的官方 Qt 二進位版本。原始碼可由 https://download.qt.io/official_releases/qt/6.12/6.12.0/ 或 https://code.qt.io/ 取得；qtbase 對應 commit `025bdad181de241e81bf853c8a2d7bf3d19261a9`，qtpdf 對應 commit `d505fc23640d2bd6345e6483eb73daf4e19f5829`（git://code.qt.io/qt/qtpdf.git） |
+| 原始碼 | 本程式使用未修改的官方 Qt 二進位版本。[Qt 6.12.0 原始碼](https://download.qt.io/official_releases/qt/6.12/6.12.0/) 的 qtbase 對應提交為 `025bdad181de241e81bf853c8a2d7bf3d19261a9`。獨立發布的 Qt PDF 6.140.0 對應 [qtpdf 原始碼](https://code.qt.io/cgit/qt/qtpdf.git/tree/?id=e081473af432e2b09d17caa3ca3bffd45992a0bd)，提交 `e081473af432e2b09d17caa3ca3bffd45992a0bd`，見 Qt SDK 的 `qtpdf-6.140.0.spdx`。 |
 
 ### 連結方式與替換 Qt
 
@@ -46,7 +46,7 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 
 ### 2.1 Qt PDF 內含（PDFium 等）
 
-隨 Qt PDF 6.140.0（隨 Qt 6.12.0 發佈）散布。版本取自 SBOM，SBOM 未標示者留空。
+隨 Qt PDF 6.140.0 正式版散布，對應 Qt 6.12.0 SDK。版本取自 SBOM，SBOM 未標示者留空。
 
 | 元件 | 版本 | 授權 | 官方網址 | 授權檔 |
 |---|---|---|---|---|
@@ -57,8 +57,13 @@ PDF to JPG_QT 本身以 MIT 授權釋出（見 `LICENSE`），著作權 © 2026 
 | ICU | 74-2 | Unicode-3.0 / ICU | https://icu.unicode.org/ | `QtPdf-icu.txt` |
 | fast_float（Copyright (c) 2021 The fast_float authors） | 7.0.0 | MIT | https://github.com/fastfloat/fast_float | `QtPdf-fast_float.txt` |
 | libjpeg-turbo | 3.1.0 | IJG、BSD-3-Clause、Zlib | https://libjpeg-turbo.org/ | `QtPdf-libjpeg-turbo.txt` |
-| libpng | 1.6.58 | libpng-2.0、Libpng | http://www.libpng.org/pub/png/libpng.html | `QtPdf-libpng.txt` |
+| libpng | 1.6.59 | libpng-2.0、Libpng | http://www.libpng.org/pub/png/libpng.html | `QtPdf-libpng.txt` |
+| Little CMS | 2.15 | MIT | https://github.com/mm2/Little-CMS | `QtPdf-lcms.txt` |
+| OpenJPEG | 2.5.3 | BSD-2-Clause | https://github.com/uclouvain/openjpeg | `QtPdf-openjpeg.txt` |
 | zlib | 1.3.1 | Zlib | https://zlib.net/ | `QtPdf-zlib.txt` |
+
+Anti-Grain Geometry 2.3 著作權聲明：Copyright (C) 2002-2005 Maxim Shemanarev (McSeem)。
+Qt PDF 的 SBOM 記載該元件的原始網站為 http://antigrain.com。
 
 ### 2.2 Qt Core（Qt6Core.dll）
 

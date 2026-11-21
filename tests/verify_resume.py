@@ -14,10 +14,10 @@ ENV = {k:v for k,v in os.environ.items() if not k.startswith(('QT_', 'QML'))}
 ENV['PATH'] = str(Path(os.environ['SystemRoot'])/'System32')
 checks=[]
 
-def pdf(path, pages=3, text='resume'):
+def pdf(path, pages=3, text='resume', width=288, height=216):
     doc=pymupdf.open()
     for i in range(pages):
-        page=doc.new_page(width=288,height=216)
+        page=doc.new_page(width=width,height=height)
         page.insert_text((20,30),f'{text} {i}')
     doc.save(path);doc.close()
 
@@ -60,6 +60,10 @@ def rejected(name,folder,files=None,**opts):
 SOURCE=WORK/'測試 にほんご.pdf';pdf(SOURCE)
 r=run('normal');assert ok(r) and r['saved']==3
 BATCH=Path(r['files'][0]['folder'])
+manifest = json.loads((BATCH/'.pdf2jpg-batch.json').read_text(encoding='utf8'))
+assert manifest['schema'] == 2
+assert manifest['qtPdfSha256'] == hashlib.sha256((DEPLOY/'Qt6Pdf.dll').read_bytes()).hexdigest()
+assert manifest['outputContract'].startswith('qt-pdf-annotations/')
 before=snap(BATCH)
 r=run('resume-complete',resume=True,resumeFolder=str(BATCH))
 assert ok(r) and r['saved']==0 and r['skipped']==3 and snap(BATCH)==before
@@ -92,10 +96,22 @@ for kind in ('corrupt','truncated','wrong-size','missing-jpg','missing-receipt',
     elif kind=='missing-manifest':(folder/'.pdf2jpg-batch.json').unlink()
     elif kind=='broken-manifest':(folder/'.pdf2jpg-batch.json').write_bytes(b'{')
     rejected(kind,folder)
-for key in ('outputContract','qt','schema'):
+for key in ('outputContract','qt','qtPdfSha256'):
     folder=clone('identity-'+key);manifest=folder/'.pdf2jpg-batch.json'
-    meta=json.loads(manifest.read_text(encoding='utf8'));meta[key]='changed';manifest.write_text(json.dumps(meta))
+    meta=json.loads(manifest.read_text(encoding='utf8'))
+    meta[key] = ('aa0e0c688d5991b0b075d241d39901b15a641d3b9c4e4b1f82f4b391b5ed6447'
+                 if key == 'qtPdfSha256' else 'changed')
+    manifest.write_text(json.dumps(meta))
     rejected('identity-'+key,folder)
+folder = clone('legacy-v1.1.0')
+manifest = folder/'.pdf2jpg-batch.json'
+meta = json.loads(manifest.read_text(encoding='utf8'))
+meta['schema'] = 1
+meta.pop('qtPdfSha256')
+meta['outputContract'] = 'qt-pdf-default/ceil/rgb32-white/jpeg-optimized-false/dpm-v1'
+manifest.write_text(json.dumps(meta))
+r = rejected('legacy-v1.1.0', folder)
+assert '續傳批次格式不相容' in ' '.join(r['files'][0]['errors'])
 # Exercise the decoder even when receipt hash and expected dimensions have been supplied.
 folder=clone('decode-check');jpg=next(folder.glob('*.jpg'));receipt=Path(str(jpg)+'.done.json')
 jpg.write_bytes(b'not jpeg');meta=json.loads(receipt.read_text(encoding='utf8'));meta['sha256']=hashlib.sha256(jpg.read_bytes()).hexdigest()
@@ -166,6 +182,40 @@ for hook in ('THREAD','SUBMIT','WRITE','CALLBACK','RECEIPT','FINAL'):
 r=run('gui-default',mode='--smoke');assert ok(r) and not r['resumeChecked'] and r['resumeEnabled'] and not r['chooseBatchEnabled']
 r=run('gui-resume',mode='--smoke',resume=True,resumeFolder=str(BATCH))
 assert ok(r) and r['resumeChecked'] and r['chooseBatchEnabled'] and r['skipped']==3
+
+# A3 at 600 DPI exceeds the ordinary 256 MiB Qt decode limit.
+a3 = WORK/'A3.pdf'
+pdf(a3, pages=1, width=297*72/25.4, height=420*72/25.4)
+r = run('a3-600-convert', [a3], dpi=600, memoryMiB=1024)
+assert ok(r) and r['saved'] == 1
+a3_folder = Path(r['files'][0]['folder'])
+with Image.open(next(a3_folder.glob('*.jpg'))) as jpg:
+    jpg.load()
+    assert jpg.size == (7016, 9922)
+    assert jpg.mode == 'RGB' and jpg.info['dpi'] == (600, 600)
+a3_before = snap(a3_folder)
+r = run('a3-600-resume', [a3], resume=True, resumeFolder=str(a3_folder), dpi=600, memoryMiB=1024)
+assert ok(r) and r['saved'] == 0 and r['skipped'] == 1
+assert snap(a3_folder) == a3_before
+r = rejected('a3-600-budget', a3_folder, files=[a3], dpi=600, memoryMiB=768)
+assert '驗證 JPG 所需影像預算不足' in ' '.join(r['files'][0]['errors'])
+
+# The selected batch may not itself be a directory reparse point.
+junction = WORK/'batch-junction'
+shell = Path(os.environ['SystemRoot'])/'System32'/'cmd.exe'
+subprocess.run([str(shell), '/d', '/c', 'mklink', '/J', str(junction), str(BATCH)],
+               check=True, env=ENV, stdout=subprocess.DEVNULL)
+rejected('batch-junction', junction)
+symbolic = WORK/'batch-symlink'
+try:
+    symbolic.symlink_to(BATCH, target_is_directory=True)
+except OSError as error:
+    if error.winerror != 1314:
+        raise
+    print('SKIP batch-symlink: Windows does not grant symlink creation', flush=True)
+else:
+    rejected('batch-symlink', symbolic)
+
 # Unicode source and selected batch both beyond the ordinary Windows MAX_PATH.
 longdir=WORK
 while len(str(longdir))<290:longdir=longdir/('長路徑日本語'+str(len(str(longdir))))

@@ -15,6 +15,8 @@ inline constexpr int kMinMemoryMiB = 128;
 inline constexpr int kMaxMemoryMiB = 2048;
 inline constexpr int kMaxEncoders = 8;
 inline constexpr int kMaxPasswordRetries = 10;
+inline constexpr qint64 kMaxPagePixels = 80'000'000;
+inline constexpr int kJpegDecodeLimitMiB = int((kMaxPagePixels * 4 + 1'048'575) / 1'048'576);
 
 struct Settings {
     QStringList files;

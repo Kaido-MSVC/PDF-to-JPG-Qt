@@ -3,6 +3,10 @@
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <cstdio>
+#include <utility>
+
+static_assert(_MSVC_LANG >= 202302L);
+static_assert(std::to_underlying(QPdfDocumentRenderOptions::RenderFlag::Annotations) == 1);
 static void check(bool ok) { if (!ok) throw std::runtime_error("engine assertion failed"); }
 int main(int argc, char **argv) {
     QCoreApplication app(argc, argv);
@@ -11,10 +15,13 @@ int main(int argc, char **argv) {
         const double inf = std::numeric_limits<double>::infinity();
         const double nan = std::numeric_limits<double>::quiet_NaN();
         for (QSizeF size : {QSizeF(0,1), QSizeF(-1,1), QSizeF(inf,1), QSizeF(nan,1), QSizeF(1e300,1e300), QSizeF(1e10,1e10)}) {
-            try { pageCost(size, 600); } catch (const std::runtime_error &) { ++rejected; }
+            try { pageGeometry(size, 600); } catch (const std::runtime_error &) { ++rejected; }
         }
         check(rejected == 6);
-        check(pageCost(QSizeF(72,72),600) == 600LL*600*12+8*kMiB);
+        const auto page = pageGeometry(QSizeF(72,72),600);
+        check(page.size == QSize(600,600) && page.bytes == 600LL*600*12+8*kMiB);
+        check(kJpegDecodeLimitMiB == 306);
+        check(pageName("draft%1", 0) == "draft%1_p0001.jpg");
         std::atomic<bool> cancelled{false};
         qputenv("PDF2JPG_FAIL_THREAD", "2");
         bool threw=false;
@@ -31,7 +38,7 @@ int main(int argc, char **argv) {
             check(q.reserve(cost));
             { EncodingQueue::Reservation r(q,cost);
               QImage im(16,16,QImage::Format_RGB32); im.fill(Qt::white);
-              q.submit({im,dir.filePath(QString::number(i)+".jpg"),cost}); r.transfer(); }
+              q.submit({im,dir.filePath(QString::number(i)+".jpg"),cost,{}}); r.transfer(); }
             bool failed=false;
             try { q.drain(); } catch (...) { failed=true; }
             q.shutdown();

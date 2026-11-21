@@ -2,7 +2,7 @@ libpng (bundled in Qt PDF 6.140.0, shipped with Qt 6.12.0)
 
 Source: Qt SBOM qtwebengine-chromium-pdf-6.140.0.spdx.json, LicenseRef-QtWebEngine-Chromium-Pdf-libpng
 Official page: https://doc-snapshots.qt.io/qtpdf/qtpdf-3rdparty-libpng.html
-Version (SBOM): 1.6.58
+Version (SBOM): 1.6.59
 
 COPYRIGHT NOTICE, DISCLAIMER, and LICENSE
 =========================================

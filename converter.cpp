@@ -9,6 +9,7 @@
 #include <QMetaEnum>
 #include <QPainter>
 #include <QPdfDocument>
+#include <QPdfDocumentRenderOptions>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QTemporaryFile>
@@ -22,6 +23,7 @@
 #include <deque>
 #include <functional>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <vector>
 #include <QCryptographicHash>
@@ -62,12 +64,16 @@ struct Scan {
     qint64 maxCost = 0;
 };
 
-qint64 pageCost(const QSizeF &pt, int dpi, double *pixels = nullptr) {
+struct PageGeometry {
+    QSize size;
+    qint64 bytes;
+};
+
+PageGeometry pageGeometry(const QSizeF &pt, int dpi) {
     const double w = std::ceil(pt.width() * dpi / 72.0), h = std::ceil(pt.height() * dpi / 72.0);
-    if (!std::isfinite(w) || !std::isfinite(h) || w < 1 || h < 1 || w > 100000 || h > 100000 || w * h > 80000000)
+    if (!std::isfinite(w) || !std::isfinite(h) || w < 1 || h < 1 || w > 100000 || h > 100000 || w * h > kMaxPagePixels)
         throw std::runtime_error("頁面尺寸過大或無效，請降低 DPI");
-    if (pixels) *pixels = w * h;
-    return qint64(w) * qint64(h) * 12 + 8 * kMiB;
+    return {QSize(int(w), int(h)), qint64(w) * qint64(h) * 12 + 8 * kMiB};
 }
 
 Scan scanPdf(const QString &path, int dpi, const std::atomic<bool> &stopped) {
@@ -82,10 +88,12 @@ Scan scanPdf(const QString &path, int dpi, const std::atomic<bool> &stopped) {
     double pixelSum = 0;
     int sampled = 0;
     for (int p = 0; p < scan.pages && !stopped; p += step) {
-        double px = 0;
-        try { scan.maxCost = std::max(scan.maxCost, pageCost(doc.pagePointSize(p), dpi, &px)); }
+        try {
+            const auto geometry = pageGeometry(doc.pagePointSize(p), dpi);
+            scan.maxCost = std::max(scan.maxCost, geometry.bytes);
+            pixelSum += double(geometry.size.width()) * geometry.size.height();
+        }
         catch (const std::runtime_error &) { continue; }
-        pixelSum += px;
         ++sampled;
     }
     // 掃描檔 JPEG 約 0.3–0.5 byte/像素，僅供提醒用的粗估。
@@ -298,7 +306,7 @@ QString Converter::askPassword(const QString &source, bool retry, bool &accepted
         answered = false;
         passwordAccepted = false;
     }
-    emit passwordNeeded(source, retry); // 不持鎖發送，避免直接連線的接收端造成死結
+    emit passwordNeeded(source, retry); // 不持鎖傳送，避免直接連線的接收端造成死結
     std::unique_lock lock(passwordMutex);
     passwordReady.wait(lock, [this] { return answered || stopped.load(); });
     accepted = answered && passwordAccepted && !stopped.load();
@@ -352,7 +360,7 @@ QJsonObject Converter::processFile(int f, qint64 &counted, QSet<QString> &usedNa
                 doc.close();
                 doc.setPassword(password);
                 loadError = doc.load(source);
-                password.fill(QChar(0)); // 只能盡量清除這份拷貝，不保證記憶體中不留痕跡
+                password.fill(QChar(0)); // 只能盡量清除這份複製的資料，不保證記憶體中不留痕跡
                 password.clear();
                 ++attempts;
             }
@@ -374,8 +382,11 @@ QJsonObject Converter::processFile(int f, qint64 &counted, QSet<QString> &usedNa
                 const QString manifest = QDir(folder).filePath(".pdf2jpg-batch.json");
                 QSet<int> complete;
                 if (settings.resume) {
-                    if (readRecord(manifest) != identity)
-                        throw std::runtime_error("批次身分不匹配（PDF 內容、檔名或輸出設定已變更）；保留原檔");
+                    const auto recordedIdentity = readRecord(manifest);
+                    if (recordedIdentity["schema"].toInt() != identity["schema"].toInt())
+                        throw std::runtime_error("續傳批次格式不相容；請關閉續傳並建立新批次。原檔已保留");
+                    if (recordedIdentity != identity)
+                        throw std::runtime_error("批次身分不符（PDF、輸出設定或 Qt PDF 元件不同）。原檔已保留");
                     complete = validateExisting(folder, stem, doc, settings, batchKey, stopped);
                 } else {
                     publishJson(manifest, identity);
@@ -391,28 +402,24 @@ QJsonObject Converter::processFile(int f, qint64 &counted, QSet<QString> &usedNa
                             if (ok || !err.isEmpty()) ++pagesDone; // 被取消而放棄的頁面不計入
                             emitProgress(false);
                         });
+                    QPdfDocumentRenderOptions renderOptions;
+                    renderOptions.setRenderFlags(QPdfDocumentRenderOptions::RenderFlag::Annotations);
                     for (int p = 0; p < pages && !stopped; ++p) {
                         try {
                             if (complete.contains(p)) {
                                 { std::lock_guard lock(counts); ++skipped; }
                                 ++pagesDone; emitProgress(false); continue;
                             }
-                            const QString target = QDir(folder).filePath(
-                                QString("%1_p%2.jpg").arg(stem).arg(p + 1, 4, 10, QChar('0')));
-                            const QSizeF pt = doc.pagePointSize(p);
-                            const double wd = std::ceil(pt.width() * settings.dpi / 72.0);
-                            const double hd = std::ceil(pt.height() * settings.dpi / 72.0);
-                            if (!std::isfinite(wd) || !std::isfinite(hd) || wd < 1 || hd < 1 || wd > 100000 || hd > 100000
-                                || wd * hd > 80000000)
-                                throw std::runtime_error("頁面尺寸過大，請降低 DPI");
-                            const qint64 cost = pageCost(pt, settings.dpi);
+                            const QString target = QDir(folder).filePath(pageName(stem, p));
+                            const auto geometry = pageGeometry(doc.pagePointSize(p), settings.dpi);
+                            const qint64 cost = geometry.bytes;
                             if (cost > queue.budget)
                                 throw std::runtime_error(QString("此頁至少需要 %1 影像記憶體預算（目前 %2），請降低 DPI 或提高預算")
                                                              .arg(formatMiB(cost), formatMiB(queue.budget)).toStdString());
                             if (!queue.reserve(cost)) break;
                             EncodingQueue::Reservation reservation(queue, cost);
                             // QPdfDocument::render 回傳帶透明度的影像；合成到白底 RGB32，避免 JPEG 透明區變黑。
-                            QImage source32 = doc.render(p, QSize(int(wd), int(hd)));
+                            QImage source32 = doc.render(p, geometry.size, renderOptions);
                             if (source32.isNull()) throw std::runtime_error("PDF 頁面渲染失敗");
                             QImage image(source32.size(), QImage::Format_RGB32);
                             if (image.isNull()) throw std::runtime_error("記憶體不足，無法建立影像");

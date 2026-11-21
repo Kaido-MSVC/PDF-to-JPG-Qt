@@ -6,6 +6,7 @@
 #include "converter.h"
 #include <QtWidgets> // 為了避免在無法編譯驗證的情況下漏標頭，先保留整包；穩定後可改成個別標頭
 #include <QDesktopServices>
+#include <QImageReader>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QPointer>
@@ -231,7 +232,7 @@ public:
         heartbeat->start();
         QTimer::singleShot(200, this, [this] {
             Settings s = settingsFromUi();
-            s.testPassword.clear(); // GUI 路徑要走密碼對話框
+            s.testPassword.clear(); // GUI 路徑要走密碼對話方塊
             if (!s.validate().isEmpty()) { qApp->exit(2); return; }
             startWorker(s);
             if (test.contains("closeMs")) QTimer::singleShot(test["closeMs"].toInt(), this, [this] { close(); });
@@ -335,7 +336,7 @@ private:
         form->addWidget(resume, 2, 0, 1, 4);
         form->addWidget(resumeFolder, 3, 0, 1, 3);
         form->addWidget(chooseBatch, 3, 3);
-        resumeFolder->setPlaceholderText("選擇 v1.1 建立的單一 PDF 輸出資料夾");
+        resumeFolder->setPlaceholderText("選擇與目前版本相容的 PDF 輸出資料夾");
         resumeFolder->setReadOnly(true);
         resumeFolder->setEnabled(false);
         chooseBatch->setEnabled(false);
@@ -623,6 +624,8 @@ static int runBatch(QApplication &app, const QJsonObject &cfg) {
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
+    // 續傳須能完整解碼程式允許的最大 JPEG。單頁尺寸與批次影像預算仍各自檢查。
+    QImageReader::setAllocationLimit(kJpegDecodeLimitMiB);
     app.setApplicationName("PDF to JPG_QT");
     app.setApplicationVersion(APP_VERSION_STR); // 由 CMakeLists.txt 的 project(VERSION) 注入
     app.setOrganizationName("PDF2JPG"); // QSettings 需要

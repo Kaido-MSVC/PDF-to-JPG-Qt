@@ -57,13 +57,30 @@ QJsonObject readRecord(const QString &path) {
 }
 
 QString pageName(const QString &stem, int page) {
-    return QString("%1_p%2.jpg").arg(stem).arg(page + 1, 4, 10, QChar('0'));
+    return QString("%1_p%2.jpg").arg(stem, QString("%1").arg(page + 1, 4, 10, QChar('0')));
+}
+
+// 以匯入的 Qt PDF 資料位址定位實際載入的 DLL，避免取到 PATH 上的同名檔案。
+const QString &pdfBuildHash() {
+    static const QString hash = [] {
+        HMODULE module = nullptr;
+        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                               reinterpret_cast<LPCWSTR>(&QPdfDocument::staticMetaObject), &module))
+            throw std::runtime_error("無法識別已載入的 Qt PDF 元件");
+        std::wstring path(32768, L'\0');
+        const DWORD length = GetModuleFileNameW(module, path.data(), DWORD(path.size()));
+        if (length == 0 || length >= path.size())
+            throw std::runtime_error("無法取得已載入的 Qt PDF 路徑");
+        return contentHash(QString::fromWCharArray(path.data(), length));
+    }();
+    return hash;
 }
 
 QJsonObject batchIdentity(const Settings &s, const QString &hash, const QString &stem, int pages) {
-    return {{"schema", 1}, {"pdfSha256", hash}, {"stem", stem}, {"pages", pages},
+    return {{"schema", 2}, {"pdfSha256", hash}, {"stem", stem}, {"pages", pages},
             {"dpi", s.dpi}, {"quality", s.quality}, {"qt", QString::fromLatin1(qVersion())},
-            {"outputContract", "qt-pdf-default/ceil/rgb32-white/jpeg-optimized-false/dpm-v1"}};
+            {"qtPdfSha256", pdfBuildHash()},
+            {"outputContract", "qt-pdf-annotations/ceil/rgb32-white/jpeg-optimized-false/dpm-v2"}};
 }
 
 QString identityHash(const QJsonObject &identity) {
@@ -94,15 +111,15 @@ QSet<int> validateExisting(const QString &folder, const QString &stem, QPdfDocum
         if (!imageInfo.isFile() || imageInfo.isSymLink())
             throw std::runtime_error(ioError(path, "已完成頁面遺失或路徑衝突").toStdString());
         const auto receipt = readRecord(receiptInfo.filePath());
-        const auto pt = doc.pagePointSize(p);
-        const auto cost = pageCost(pt, s.dpi);
-        if (cost > qint64(s.memoryMiB) * kMiB) throw std::runtime_error("驗證 JPG 所需影像預算不足");
-        const QSize expected(int(std::ceil(pt.width() * s.dpi / 72.0)), int(std::ceil(pt.height() * s.dpi / 72.0)));
+        const auto geometry = pageGeometry(doc.pagePointSize(p), s.dpi);
+        if (geometry.bytes > qint64(s.memoryMiB) * kMiB) throw std::runtime_error("驗證 JPG 所需影像預算不足");
+        const QSize expected = geometry.size;
         if (receipt["schema"].toInt() != 1 || receipt["batch"].toString() != batchKey || receipt["name"].toString() != name
             || receipt["width"].toInt() != expected.width()
             || receipt["height"].toInt() != expected.height() || receipt["sha256"].toString() != contentHash(path, &cancel))
             throw std::runtime_error(ioError(path, "JPG 憑證或尺寸不匹配；不覆寫原檔").toStdString());
         QImageReader reader(path, "jpg");
+        reader.setAutoDetectImageFormat(false);
         if (reader.size() != expected || reader.read().size() != expected)
             throw std::runtime_error(ioError(path, "JPG 無法完整解碼或尺寸不匹配").toStdString());
         complete.insert(p);

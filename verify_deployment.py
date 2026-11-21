@@ -1,12 +1,26 @@
 """Check production deployment with a clean PATH. No user settings are saved."""
 from pathlib import Path
-import ctypes, json, os, re, subprocess, time
+import argparse, ctypes, hashlib, json, os, re, subprocess, time
 root=Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument('--qt-root', type=Path, default=Path('D:/qt/6.12.0/msvc2022_64'))
+args = parser.parse_args()
 env=os.environ.copy();env['PATH']=str(Path(os.environ['SystemRoot'])/'System32')
 for k in list(env):
     if k.startswith(('QT_','QML')):env.pop(k,None)
 startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW;startup.wShowWindow=0
 exe=root/'dist'/'PDF-to-JPG_QT.exe'
+executable = exe.read_bytes()
+for marker in ('--batch', '--smoke', 'PDF2JPG_FAIL_THREAD', 'PDF2JPG_CRASH_AFTER_PUBLISH'):
+    assert marker.encode() not in executable and marker.encode('utf-16-le') not in executable, marker
+qt_dlls = {}
+for dll in sorted(exe.parent.rglob('*.dll')):
+    relative = dll.relative_to(exe.parent)
+    sdk = args.qt_root/('bin' if len(relative.parts) == 1 else 'plugins')/relative
+    digest = hashlib.sha256(dll.read_bytes()).hexdigest()
+    assert digest == hashlib.sha256(sdk.read_bytes()).hexdigest(), f'SDK mismatch: {relative}'
+    qt_dlls[relative.as_posix()] = digest
+assert {'Qt6Pdf.dll', 'imageformats/qpdf.dll', 'imageformats/qjpeg.dll'} <= qt_dlls.keys()
 for doc in ('LICENSE','THIRD_PARTY_NOTICES.md','licenses/LGPL-3.0.txt','licenses/GPL-3.0.txt','licenses/Qt-LICENSE.txt'):
     assert (exe.parent/doc).is_file(),f'missing license file: {doc}'
 # Windows SDK redistributables are not shipped (their license needs recipient terms); Windows provides d3dcompiler_47.
@@ -45,6 +59,8 @@ src=sorted(f.name for f in (root/'licenses').glob('*'));dst=sorted(f.name for f 
 assert src==dst,'dist/licenses differs from licenses/'
 for f in (root/'licenses').glob('*'):
     assert f.read_bytes()==(exe.parent/'licenses'/f.name).read_bytes(),f'dist/licenses/{f.name} is stale'
+for file in ('LICENSE', 'THIRD_PARTY_NOTICES.md', '使用說明.txt'):
+    assert (root/file).read_bytes() == (exe.parent/file).read_bytes(), f'{file} is stale'
 p=subprocess.Popen([str(exe)],cwd=exe.parent,env=env,startupinfo=startup)
 modules=set()
 try:
@@ -60,7 +76,8 @@ try:
     for dll in ('Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll','Qt6Pdf.dll','qwindows.dll'):
         assert any(Path(m).name.lower()==dll.lower() and str(exe.parent).lower() in m.lower() for m in modules),dll
     assert any(Path(m).name.lower()=='msvcp140.dll' and str(exe.parent).lower() not in m.lower() for m in modules),'msvcp140.dll not loaded from the system'
-    result=dict(passed=True,exe=str(exe),loadedModules=sorted(modules),note='Idle startup verified; no conversion active when test process was terminated.')
+    result=dict(passed=True,exe=str(exe),loadedModules=sorted(modules),qtDllSha256=qt_dlls,
+                note='Idle startup verified; no conversion active when test process was terminated.')
     (root/'work'/'release-deployment.json').write_text(json.dumps(result,indent=2),encoding='utf8')
     print('PASS production deployment: Qt/PDF/Windows plugin loaded from dist, MSVC CRT from the system')
 finally:

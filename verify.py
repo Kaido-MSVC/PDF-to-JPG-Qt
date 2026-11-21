@@ -65,6 +65,32 @@ for dpi in (150,200,300,600):
         assert im.size==(dpi*4,dpi*3),(im.size,dpi)
         assert abs(im.info['dpi'][0]-dpi)<=1 and im.mode=='RGB'
         assert min(im.getpixel((im.width-1,im.height-1)))>=250
+annotated = WORK/'visible-annotations.pdf'
+with pymupdf.open() as doc:
+    for with_annotations in (True, False):
+        page = doc.new_page(width=288, height=216)
+        page.insert_text((45, 125), 'SYNTHETIC UNDERLAY', fontsize=15, color=(1, 0, 0))
+        if with_annotations:
+            page.add_freetext_annot(pymupdf.Rect(40, 30, 240, 65), 'VISIBLE ANNOTATION',
+                                    fontsize=15, text_color=(0, 0, 0))
+            cover = page.add_rect_annot(pymupdf.Rect(35, 103, 255, 138))
+            cover.set_colors(stroke=(0, 0, 0), fill=(0, 0, 0))
+            cover.update()
+    doc.save(annotated)
+
+r = run('visible-annotations', [annotated], dpi=150)
+assert states(r) == ['completed'] and r['saved'] == 2
+pages = sorted(Path(r['files'][0]['folder']).glob('*.jpg'))
+with Image.open(pages[0]) as marked, Image.open(pages[1]) as plain:
+    def pixels(image, bounds):
+        return list(image.crop(tuple(round(pt*150/72) for pt in bounds)).get_flattened_data())
+
+    text_area = (45, 32, 235, 63)
+    mask_area = (43, 107, 220, 134)
+    assert sum(max(rgb) < 80 for rgb in pixels(marked, text_area)) > 100
+    assert min(map(min, pixels(plain, text_area))) > 240
+    assert max(map(max, pixels(marked, mask_area))) < 40
+    assert sum(red > 180 and green < 80 and blue < 80 for red, green, blue in pixels(plain, mask_area)) > 100
 r=run('mixed',[normal,locked,broken,missing],password='test-pass')
 assert states(r)==['completed','completed','failed','failed']
 r=run('wrong-password',[locked,normal],password='bad');assert states(r)==['failed','completed']
